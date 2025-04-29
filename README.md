@@ -1,70 +1,99 @@
-# Getting Started with Create React App
+# ExpenseMinimizer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+ExpenseMinimizer is a cloud-hosted web application that helps users track and minimize different types of expenses across months, including:
+- **Monetary** (measured in dollars $)
+- **Time** (measured in hours)
+- **Emotional/Mental** (measured in units)
 
-## Available Scripts
+Users can view, add, and remove expenses by type and month, and interact with a simple "ExpenseMinimizerGPT" chatbot that offers basic cost-saving advice. All data persists locally across sessions.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Month Selector**: Choose a specific month to manage expenses.
+- **Expense Type Tabs**: Track expenses by Monetary, Time, and Emotional/Mental categories.
+- **Expense Management**: Add named expenses with amounts, categorized by type.
+- **Expense Formatting**:  
+  - Monetary Expenses — displayed with **($)**  
+  - Time Expenses — displayed with **(hours)**  
+  - Emotional/Mental Expenses — displayed with **(units)**
+- **Persistent Storage**: Expenses and chatbot conversations are saved using `localStorage`, maintaining state after reloads.
+- **ExpenseMinimizerGPT Chat**:
+  - Ask for advice about minimizing expenses.
+  - Full chat history is persistent.
+  - **Clear Chat** button to reset the conversation.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Architecture Overview
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Layer | Technology Used |
+|:------|:----------------|
+| Frontend | React.js (Create React App) |
+| Hosting | AWS Amplify (Static Web Hosting) |
+| Version Control | GitHub |
+| CI/CD Pipeline | GitHub → AWS Amplify (Automatic Deploy on Push) |
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## AWS Services Integrated
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **AWS Amplify**:  
+  - Frontend hosting.
+  - Continuous Deployment (CI/CD) integrated with GitHub.
+  - SSL certificate and public HTTPS access automatically configured.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Project Deployment
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Source Code**: [GitHub Repository Link](https://github.com/CleanCodeCrammed/expense-minimizer)
+- **Live App**: [AWS Amplify App Link](https://YOUR_APP_LINK.amplifyapp.com)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+*(Replace the above links after deployment)*
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Future Enhancements
 
-## Learn More
+In a full production version, the following improvements will be made:
+- **Backend Integration**:
+  - Store expense data in **AWS RDS (PostgreSQL)** for true cloud persistence.
+  - Authenticate users with **AWS Cognito** (Sign Up, Login, JWT tokens).
+- **Real GPT Integration**:
+  - Upgrade the chatbot using **Amazon Bedrock** or **Amazon Lex** with a real AI backend.
+- **Mobile Responsive Design**:
+  - Enhance the UI to adapt perfectly for mobile devices.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Challenges Faced
 
-### Code Splitting
+- Time constraints: To meet strict deployment deadlines, frontend LocalStorage was used for persistence initially.
+- CI/CD setup: Ensuring GitHub to Amplify automated deployment pipeline was correctly configured.
+- Persistence: Redoing the project when DynamoDB failed and Git Hub rejected our OpenAI API was crucial.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## How to Run Locally
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/CleanCodeCrammed/expense-minimizer.git
+    cd expense-minimizer
+    ```
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+3. Start the development server:
+    ```bash
+    npm start
+    ```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## License
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is provided for academic and educational purposes.
