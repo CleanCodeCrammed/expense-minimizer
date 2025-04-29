@@ -3,6 +3,12 @@ import './App.css';
 
 const expenseTypes = ['Monetary', 'Time', 'Emotional/Mental'];
 
+const typeUnits = {
+  'Monetary': '($)',
+  'Time': '(hours)',
+  'Emotional/Mental': '(units)'
+};
+
 function App() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [expenses, setExpenses] = useState([]);
@@ -11,13 +17,20 @@ function App() {
   const [chatMessages, setChatMessages] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey(month));
-    if (saved) setExpenses(JSON.parse(saved));
+    const savedExpenses = localStorage.getItem(storageKey(month));
+    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+
+    const savedChats = localStorage.getItem('chatMessages');
+    if (savedChats) setChatMessages(JSON.parse(savedChats));
   }, [month]);
 
   useEffect(() => {
     localStorage.setItem(storageKey(month), JSON.stringify(expenses));
   }, [expenses, month]);
+
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+  }, [chatMessages]);
 
   function storageKey(month) {
     return `expenses_${month}`;
@@ -29,10 +42,17 @@ function App() {
   }
 
   function handleAddExpense() {
-    const description = prompt('Enter Expense Description:');
-    if (description) {
-      setExpenses([...expenses, { type: selectedType, description }]);
+    const name = prompt('Enter Expense Name:');
+    if (!name) return;
+
+    const amountInput = prompt('Enter Expense Amount (numbers only):');
+    const amount = parseFloat(amountInput);
+    if (isNaN(amount)) {
+      alert('Invalid amount. Please enter a number.');
+      return;
     }
+
+    setExpenses([...expenses, { type: selectedType, name, amount }]);
   }
 
   function handleRemoveExpense(index) {
@@ -44,6 +64,34 @@ function App() {
       setChatMessages([...chatMessages, { user: chatInput, bot: "Think about cutting unnecessary expenses!" }]);
       setChatInput('');
     }
+  }
+
+  function handleClearChat() {
+    setChatMessages([]);
+    localStorage.removeItem('chatMessages');
+  }
+
+  function formatAmount(expense) {
+    switch (expense.type) {
+      case 'Monetary':
+        return `$${expense.amount}`;
+      case 'Time':
+        return `${expense.amount} hours`;
+      case 'Emotional/Mental':
+        return `${expense.amount} units`;
+      default:
+        return expense.amount;
+    }
+  }
+
+  function generateMonthOptions() {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + i);
+      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+    return months;
   }
 
   return (
@@ -78,14 +126,14 @@ function App() {
 
         {/* Expense Items List */}
         <div style={{ marginTop: 20 }}>
-          <h2>{selectedType} Expenses</h2>
+          <h2>{selectedType} Expenses {typeUnits[selectedType]}</h2>
           <button onClick={handleAddExpense}>Add Expense</button>
           <ul>
             {expenses
               .filter(e => e.type === selectedType)
               .map((e, index) => (
                 <li key={index}>
-                  {e.description}
+                  {e.name} — {formatAmount(e)}
                   <button onClick={() => handleRemoveExpense(index)} style={{ marginLeft: 10 }}>
                     Remove
                   </button>
@@ -99,7 +147,7 @@ function App() {
       {/* Chatbox */}
       <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
         <h2>ExpenseMinimizerGPT</h2>
-        <div style={{ height: '80%', overflowY: 'auto', marginBottom: 10 }}>
+        <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
           {chatMessages.map((m, i) => (
             <div key={i}>
               <strong>You:</strong> {m.user}<br />
@@ -113,20 +161,11 @@ function App() {
           placeholder="Ask for advice..."
           style={{ width: '100%', marginBottom: 10 }}
         />
-        <button onClick={handleSendMessage} style={{ width: '100%' }}>Send</button>
+        <button onClick={handleSendMessage} style={{ width: '100%', marginBottom: 10 }}>Send</button>
+        <button onClick={handleClearChat} style={{ width: '100%' }}>Clear Chat</button>
       </div>
     </div>
   );
-}
-
-function generateMonthOptions() {
-  const months = [];
-  for (let i = 0; i < 12; i++) {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
-    months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return months;
 }
 
 export default App;
