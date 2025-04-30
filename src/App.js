@@ -9,6 +9,11 @@ const typeUnits = {
   'Emotional/Mental': '(units)'
 };
 
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 function App() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [expenses, setExpenses] = useState([]);
@@ -89,21 +94,27 @@ function App() {
     for (let i = 0; i < 12; i++) {
       const date = new Date();
       date.setMonth(date.getMonth() + i);
-      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+      const year = date.getFullYear();
+      const monthIndex = date.getMonth();
+      const monthKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      const label = `${monthNames[monthIndex]} ${year}`;
+      months.push({ key: monthKey, label });
     }
     return months;
   }
+
+  const titleStyle = { fontSize: '1.5em', fontFamily: 'Arial, sans-serif' };
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
       {/* Main App */}
       <div style={{ flex: 3, padding: 20 }}>
-        <h1>ExpenseMinimizer</h1>
+        <h1 style={titleStyle}>ExpenseMinimizer</h1>
 
         {/* Month Selector */}
         <select value={month} onChange={(e) => setMonth(e.target.value)}>
-          {generateMonthOptions().map((m) => (
-            <option key={m} value={m}>{m}</option>
+          {generateMonthOptions().map(({ key, label }) => (
+            <option key={key} value={key}>{label}</option>
           ))}
         </select>
 
@@ -124,15 +135,15 @@ function App() {
           ))}
         </div>
 
-        {/* Expense Title and Total aligned horizontally */}
+        {/* Expense Title and Total aligned */}
         <div style={{
           marginTop: 20,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <h2 style={{ fontSize: '1.5em' }}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
-          <div style={{ fontSize: '1.5em', marginRight: '10%' }}>
+          <h2 style={titleStyle}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+          <div style={{ ...titleStyle, marginRight: '10%' }}>
             {selectedType === 'Monetary' && (
               <div>Total Monetary Expenses ($): {expenses.filter(e => e.type === 'Monetary').reduce((sum, e) => sum + e.amount, 0)}</div>
             )}
@@ -164,7 +175,7 @@ function App() {
 
       {/* Chatbox */}
       <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
-        <h2>ExpenseMinimizerGPT</h2>
+        <h2 style={titleStyle}>ExpenseMinimizerGPT</h2>
         <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
           {chatMessages.map((m, i) => (
             <div key={i}>
