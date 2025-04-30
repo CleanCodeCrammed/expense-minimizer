@@ -38,28 +38,7 @@ function App() {
 
   function getCurrentMonth() {
     const now = new Date();
-    return formatMonth(now.getFullYear(), now.getMonth());
-  }
-
-  function formatMonth(year, monthIndex) {
-    const date = new Date(year, monthIndex);
-    return `${date.toLocaleString('default', { month: 'long' })} ${year}`;
-  }
-
-  function parseMonth(monthStr) {
-    const [monthName, year] = monthStr.split(' ');
-    const date = new Date(`${monthName} 1, ${year}`);
-    return { year: parseInt(year), monthIndex: date.getMonth() };
-  }
-
-  function generateMonthOptions() {
-    const months = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const futureDate = new Date(now.getFullYear(), now.getMonth() + i);
-      months.push(formatMonth(futureDate.getFullYear(), futureDate.getMonth()));
-    }
-    return months;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
   function handleAddExpense() {
@@ -82,10 +61,7 @@ function App() {
 
   function handleSendMessage() {
     if (chatInput.trim()) {
-      setChatMessages([...chatMessages, {
-        user: chatInput,
-        bot: "Think about cutting unnecessary expenses!"
-      }]);
+      setChatMessages([...chatMessages, { user: chatInput, bot: "Think about cutting unnecessary expenses!" }]);
       setChatInput('');
     }
   }
@@ -108,19 +84,14 @@ function App() {
     }
   }
 
-  function calculateTotal(type) {
-    return expenses
-      .filter(e => e.type === type)
-      .reduce((sum, e) => sum + e.amount, 0);
-  }
-
-  function totalLabel(type) {
-    switch (type) {
-      case 'Monetary': return 'Total Monetary Expenses ($)';
-      case 'Time': return 'Total Time Expenses (hours)';
-      case 'Emotional/Mental': return 'Total Emotional/Mental Expenses (units)';
-      default: return '';
+  function generateMonthOptions() {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + i);
+      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
     }
+    return months;
   }
 
   return (
@@ -153,39 +124,42 @@ function App() {
           ))}
         </div>
 
-        {/* Expense Section Header and Total */}
+        {/* Expense Title and Total aligned horizontally */}
         <div style={{
           marginTop: 20,
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          <h2 style={{ margin: 0 }}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
-          <h3 style={{ margin: 0 }}>
-            {totalLabel(selectedType)}: {calculateTotal(selectedType)}
-          </h3>
+          <h2 style={{ fontSize: '1.5em' }}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+          <div style={{ fontSize: '1.5em', marginRight: '10%' }}>
+            {selectedType === 'Monetary' && (
+              <div>Total Monetary Expenses ($): {expenses.filter(e => e.type === 'Monetary').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+            {selectedType === 'Time' && (
+              <div>Total Time Expenses (hours): {expenses.filter(e => e.type === 'Time').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+            {selectedType === 'Emotional/Mental' && (
+              <div>Total Emotional/Mental Expenses (units): {expenses.filter(e => e.type === 'Emotional/Mental').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+          </div>
         </div>
 
-        {/* Expense Items List */}
-        <div style={{ marginTop: 10 }}>
-          <button onClick={handleAddExpense}>Add Expense</button>
-          <ul>
-            {expenses
-              .filter(e => e.type === selectedType)
-              .map((e, index) => (
-                <li key={index}>
-                  {e.name} — {formatAmount(e)}
-                  <button
-                    onClick={() => handleRemoveExpense(index)}
-                    style={{ marginLeft: 10 }}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
+        {/* Expense List */}
+        <button onClick={handleAddExpense} style={{ marginTop: 10 }}>Add Expense</button>
+        <ul>
+          {expenses
+            .filter(e => e.type === selectedType)
+            .map((e, index) => (
+              <li key={index}>
+                {e.name} — {formatAmount(e)}
+                <button onClick={() => handleRemoveExpense(index)} style={{ marginLeft: 10 }}>
+                  Remove
+                </button>
+              </li>
+            ))
+          }
+        </ul>
       </div>
 
       {/* Chatbox */}
