@@ -16,6 +16,7 @@ function App() {
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
 
+  // LocalStorage loading
   useEffect(() => {
     const savedExpenses = localStorage.getItem(storageKey(month));
     if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
@@ -24,6 +25,7 @@ function App() {
     if (savedChats) setChatMessages(JSON.parse(savedChats));
   }, [month]);
 
+  // LocalStorage saving
   useEffect(() => {
     localStorage.setItem(storageKey(month), JSON.stringify(expenses));
   }, [expenses, month]);
@@ -32,15 +34,42 @@ function App() {
     localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
   }, [chatMessages]);
 
-  function storageKey(month) {
-    return `expenses_${month}`;
-  }
-
+  // Helpers
   function getCurrentMonth() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
+  function storageKey(month) {
+    return `expenses_${month}`;
+  }
+
+  function formatAmount(expense) {
+    switch (expense.type) {
+      case 'Monetary': return `$${expense.amount}`;
+      case 'Time': return `${expense.amount} hours`;
+      case 'Emotional/Mental': return `${expense.amount} units`;
+      default: return expense.amount;
+    }
+  }
+
+  function generateMonthOptions() {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + i);
+      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+    return months;
+  }
+
+  function calculateTotal() {
+    return expenses
+      .filter(e => e.type === selectedType)
+      .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+  }
+
+  // Event Handlers
   function handleAddExpense() {
     const name = prompt('Enter Expense Name:');
     if (!name) return;
@@ -61,7 +90,10 @@ function App() {
 
   function handleSendMessage() {
     if (chatInput.trim()) {
-      setChatMessages([...chatMessages, { user: chatInput, bot: "Think about cutting unnecessary expenses!" }]);
+      setChatMessages([
+        ...chatMessages,
+        { user: chatInput, bot: 'Think about cutting unnecessary expenses!' }
+      ]);
       setChatInput('');
     }
   }
@@ -71,32 +103,10 @@ function App() {
     localStorage.removeItem('chatMessages');
   }
 
-  function formatAmount(expense) {
-    switch (expense.type) {
-      case 'Monetary':
-        return `$${expense.amount}`;
-      case 'Time':
-        return `${expense.amount} hours`;
-      case 'Emotional/Mental':
-        return `${expense.amount} units`;
-      default:
-        return expense.amount;
-    }
-  }
-
-  function generateMonthOptions() {
-    const months = [];
-    for (let i = 0; i < 12; i++) {
-      const date = new Date();
-      date.setMonth(date.getMonth() + i);
-      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
-    }
-    return months;
-  }
-
+  // UI
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Main App */}
+      {/* Main Panel */}
       <div style={{ flex: 3, padding: 20 }}>
         <h1>ExpenseMinimizer</h1>
 
@@ -107,7 +117,7 @@ function App() {
           ))}
         </select>
 
-        {/* Expense Type Tabs */}
+        {/* Type Tabs */}
         <div style={{ marginTop: 20 }}>
           {expenseTypes.map((type) => (
             <button
@@ -124,7 +134,12 @@ function App() {
           ))}
         </div>
 
-        {/* Expense Items List */}
+        {/* Total Display */}
+        <div style={{ marginTop: 20, fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>
+          Total {selectedType} Expense: {calculateTotal()} {typeUnits[selectedType]}
+        </div>
+
+        {/* Expense List */}
         <div style={{ marginTop: 20 }}>
           <h2>{selectedType} Expenses {typeUnits[selectedType]}</h2>
           <button onClick={handleAddExpense}>Add Expense</button>
@@ -138,13 +153,12 @@ function App() {
                     Remove
                   </button>
                 </li>
-              ))
-            }
+              ))}
           </ul>
         </div>
       </div>
 
-      {/* Chatbox */}
+      {/* Chatbox Panel */}
       <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
         <h2>ExpenseMinimizerGPT</h2>
         <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
