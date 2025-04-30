@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const expenseTypes = ['Monetary', 'Time', 'Emotional/Mental'];
 
 const typeUnits = {
-  Monetary: '($)',
-  Time: '(hours)',
-  'Emotional/Mental': '(units)',
+  'Monetary': '($)',
+  'Time': '(hours)',
+  'Emotional/Mental': '(units)'
 };
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 function App() {
@@ -77,10 +66,7 @@ function App() {
 
   function handleSendMessage() {
     if (chatInput.trim()) {
-      setChatMessages([
-        ...chatMessages,
-        { user: chatInput, bot: 'Consider reviewing your expenses for potential savings.' },
-      ]);
+      setChatMessages([...chatMessages, { user: chatInput, bot: "Think about cutting unnecessary expenses!" }]);
       setChatInput('');
     }
   }
@@ -117,103 +103,84 @@ function App() {
     return months;
   }
 
-  const filteredExpenses = expenses.filter((e) => e.type === selectedType);
-  const totalAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const chartData = {
-    labels: filteredExpenses.map((e) => e.name),
-    datasets: [
-      {
-        label: `${selectedType} Expenses`,
-        data: filteredExpenses.map((e) => e.amount),
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-    },
-  };
-
   const titleStyle = { fontSize: '1.5em', fontFamily: 'Arial, sans-serif' };
 
   return (
-    <div className="app-container">
+    <div style={{ display: 'flex', height: '100vh' }}>
       {/* Main App */}
-      <div className="main-content">
+      <div style={{ flex: 3, padding: 20 }}>
         <h1 style={titleStyle}>ExpenseMinimizer</h1>
 
         {/* Month Selector */}
         <select value={month} onChange={(e) => setMonth(e.target.value)}>
           {generateMonthOptions().map(({ key, label }) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
+            <option key={key} value={key}>{label}</option>
           ))}
         </select>
 
         {/* Expense Type Tabs */}
-        <div className="expense-tabs">
+        <div style={{ marginTop: 20 }}>
           {expenseTypes.map((type) => (
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={selectedType === type ? 'active-tab' : ''}
+              style={{
+                marginRight: 10,
+                padding: 10,
+                backgroundColor: selectedType === type ? '#ccc' : '#eee'
+              }}
             >
               {type}
             </button>
           ))}
         </div>
 
-        {/* Expense Title */}
-        <h2 style={titleStyle}>
-          {selectedType} Expenses {typeUnits[selectedType]}
-        </h2>
-
-        {/* Chart */}
-        <div className="chart-container">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-
-        {/* Total */}
-        <div className="total-display">
-          Total: {totalAmount} {typeUnits[selectedType]}
+        {/* Expense Title and Total aligned */}
+        <div style={{
+          marginTop: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <h2 style={titleStyle}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+          <div style={{ ...titleStyle, marginRight: '10%' }}>
+            {selectedType === 'Monetary' && (
+              <div>Total Monetary Expenses ($): {expenses.filter(e => e.type === 'Monetary').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+            {selectedType === 'Time' && (
+              <div>Total Time Expenses (hours): {expenses.filter(e => e.type === 'Time').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+            {selectedType === 'Emotional/Mental' && (
+              <div>Total Emotional/Mental Expenses (units): {expenses.filter(e => e.type === 'Emotional/Mental').reduce((sum, e) => sum + e.amount, 0)}</div>
+            )}
+          </div>
         </div>
 
         {/* Expense List */}
-        <button onClick={handleAddExpense} className="add-expense-button">
-          Add Expense
-        </button>
-        <ul className="expense-list">
-          {filteredExpenses.map((e, index) => (
-            <li key={index}>
-              {e.name} — {formatAmount(e)}
-              <button onClick={() => handleRemoveExpense(index)} className="remove-button">
-                Remove
-              </button>
-            </li>
-          ))}
+        <button onClick={handleAddExpense} style={{ marginTop: 10 }}>Add Expense</button>
+        <ul>
+          {expenses
+            .filter(e => e.type === selectedType)
+            .map((e, index) => (
+              <li key={index}>
+                {e.name} — {formatAmount(e)}
+                <button onClick={() => handleRemoveExpense(index)} style={{ marginLeft: 10 }}>
+                  Remove
+                </button>
+              </li>
+            ))
+          }
         </ul>
       </div>
 
       {/* Chatbox */}
-      <div className="chatbox">
+      <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
         <h2 style={titleStyle}>ExpenseMinimizerGPT</h2>
-        <div className="chat-messages">
+        <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
           {chatMessages.map((m, i) => (
             <div key={i}>
-              <strong>You:</strong> {m.user}
-              <br />
-              <strong>Bot:</strong> {m.bot}
-              <br />
-              <br />
+              <strong>You:</strong> {m.user}<br />
+              <strong>Bot:</strong> {m.bot}<br /><br />
             </div>
           ))}
         </div>
@@ -221,14 +188,10 @@ function App() {
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           placeholder="Ask for advice..."
-          className="chat-input"
+          style={{ width: '100%', marginBottom: 10 }}
         />
-        <button onClick={handleSendMessage} className="chat-button">
-          Send
-        </button>
-        <button onClick={handleClearChat} className="chat-button">
-          Clear Chat
-        </button>
+        <button onClick={handleSendMessage} style={{ width: '100%', marginBottom: 10 }}>Send</button>
+        <button onClick={handleClearChat} style={{ width: '100%' }}>Clear Chat</button>
       </div>
     </div>
   );
