@@ -16,7 +16,6 @@ function App() {
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
 
-  // LocalStorage loading
   useEffect(() => {
     const savedExpenses = localStorage.getItem(storageKey(month));
     if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
@@ -25,7 +24,6 @@ function App() {
     if (savedChats) setChatMessages(JSON.parse(savedChats));
   }, [month]);
 
-  // LocalStorage saving
   useEffect(() => {
     localStorage.setItem(storageKey(month), JSON.stringify(expenses));
   }, [expenses, month]);
@@ -34,42 +32,36 @@ function App() {
     localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
   }, [chatMessages]);
 
-  // Helpers
-  function getCurrentMonth() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  }
-
   function storageKey(month) {
     return `expenses_${month}`;
   }
 
-  function formatAmount(expense) {
-    switch (expense.type) {
-      case 'Monetary': return `$${expense.amount}`;
-      case 'Time': return `${expense.amount} hours`;
-      case 'Emotional/Mental': return `${expense.amount} units`;
-      default: return expense.amount;
-    }
+  function getCurrentMonth() {
+    const now = new Date();
+    return formatMonth(now.getFullYear(), now.getMonth());
+  }
+
+  function formatMonth(year, monthIndex) {
+    const date = new Date(year, monthIndex);
+    return `${date.toLocaleString('default', { month: 'long' })} ${year}`;
+  }
+
+  function parseMonth(monthStr) {
+    const [monthName, year] = monthStr.split(' ');
+    const date = new Date(`${monthName} 1, ${year}`);
+    return { year: parseInt(year), monthIndex: date.getMonth() };
   }
 
   function generateMonthOptions() {
     const months = [];
+    const now = new Date();
     for (let i = 0; i < 12; i++) {
-      const date = new Date();
-      date.setMonth(date.getMonth() + i);
-      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+      const futureDate = new Date(now.getFullYear(), now.getMonth() + i);
+      months.push(formatMonth(futureDate.getFullYear(), futureDate.getMonth()));
     }
     return months;
   }
 
-  function calculateTotal() {
-    return expenses
-      .filter(e => e.type === selectedType)
-      .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
-  }
-
-  // Event Handlers
   function handleAddExpense() {
     const name = prompt('Enter Expense Name:');
     if (!name) return;
@@ -90,10 +82,10 @@ function App() {
 
   function handleSendMessage() {
     if (chatInput.trim()) {
-      setChatMessages([
-        ...chatMessages,
-        { user: chatInput, bot: 'Think about cutting unnecessary expenses!' }
-      ]);
+      setChatMessages([...chatMessages, {
+        user: chatInput,
+        bot: "Think about cutting unnecessary expenses!"
+      }]);
       setChatInput('');
     }
   }
@@ -103,10 +95,37 @@ function App() {
     localStorage.removeItem('chatMessages');
   }
 
-  // UI
+  function formatAmount(expense) {
+    switch (expense.type) {
+      case 'Monetary':
+        return `$${expense.amount}`;
+      case 'Time':
+        return `${expense.amount} hours`;
+      case 'Emotional/Mental':
+        return `${expense.amount} units`;
+      default:
+        return expense.amount;
+    }
+  }
+
+  function calculateTotal(type) {
+    return expenses
+      .filter(e => e.type === type)
+      .reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  function totalLabel(type) {
+    switch (type) {
+      case 'Monetary': return 'Total Monetary Expenses ($)';
+      case 'Time': return 'Total Time Expenses (hours)';
+      case 'Emotional/Mental': return 'Total Emotional/Mental Expenses (units)';
+      default: return '';
+    }
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Main Panel */}
+      {/* Main App */}
       <div style={{ flex: 3, padding: 20 }}>
         <h1>ExpenseMinimizer</h1>
 
@@ -117,7 +136,7 @@ function App() {
           ))}
         </select>
 
-        {/* Type Tabs */}
+        {/* Expense Type Tabs */}
         <div style={{ marginTop: 20 }}>
           {expenseTypes.map((type) => (
             <button
@@ -134,14 +153,21 @@ function App() {
           ))}
         </div>
 
-        {/* Total Display */}
-        <div style={{ marginTop: 20, fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>
-          Total {selectedType} Expense: {calculateTotal()} {typeUnits[selectedType]}
+        {/* Expense Section Header and Total */}
+        <div style={{
+          marginTop: 20,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{ margin: 0 }}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+          <h3 style={{ margin: 0 }}>
+            {totalLabel(selectedType)}: {calculateTotal(selectedType)}
+          </h3>
         </div>
 
-        {/* Expense List */}
-        <div style={{ marginTop: 20 }}>
-          <h2>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+        {/* Expense Items List */}
+        <div style={{ marginTop: 10 }}>
           <button onClick={handleAddExpense}>Add Expense</button>
           <ul>
             {expenses
@@ -149,16 +175,20 @@ function App() {
               .map((e, index) => (
                 <li key={index}>
                   {e.name} — {formatAmount(e)}
-                  <button onClick={() => handleRemoveExpense(index)} style={{ marginLeft: 10 }}>
+                  <button
+                    onClick={() => handleRemoveExpense(index)}
+                    style={{ marginLeft: 10 }}
+                  >
                     Remove
                   </button>
                 </li>
-              ))}
+              ))
+            }
           </ul>
         </div>
       </div>
 
-      {/* Chatbox Panel */}
+      {/* Chatbox */}
       <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
         <h2>ExpenseMinimizerGPT</h2>
         <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
