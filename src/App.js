@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 const expenseTypes = ['Monetary', 'Time', 'Emotional/Mental'];
-
 const typeUnits = {
-  'Monetary': '($)',
-  'Time': '(hours)',
+  Monetary: '($)',
+  Time: '(hours)',
   'Emotional/Mental': '(units)'
 };
 
@@ -16,29 +15,31 @@ const monthNames = [
 
 function App() {
   const [month, setMonth] = useState(getCurrentMonth());
-  const [expenses, setExpenses] = useState([]);
+  const [expensesByMonth, setExpensesByMonth] = useState({});
   const [selectedType, setSelectedType] = useState(expenseTypes[0]);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // === EFFECTS ===
   useEffect(() => {
-    const savedExpenses = localStorage.getItem(storageKey(month));
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    const saved = localStorage.getItem(storageKey(month));
+    if (saved) setExpensesByMonth(prev => ({ ...prev, [month]: JSON.parse(saved) }));
 
     const savedChats = localStorage.getItem('chatMessages');
     if (savedChats) setChatMessages(JSON.parse(savedChats));
   }, [month]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey(month), JSON.stringify(expenses));
-  }, [expenses, month]);
+    localStorage.setItem(storageKey(month), JSON.stringify(expensesByMonth[month] || {}));
+  }, [expensesByMonth, month]);
 
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
   }, [chatMessages]);
 
-  function storageKey(month) {
-    return `expenses_${month}`;
+  function storageKey(m) {
+    return `expenses_${m}`;
   }
 
   function getCurrentMonth() {
@@ -46,28 +47,77 @@ function App() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
+  // === EXPENSE LOGIC ===
   function handleAddExpense() {
-    const name = prompt('Enter Expense Name:');
+    const name = prompt('Enter expense name:');
     if (!name) return;
-
-    const amountInput = prompt('Enter Expense Amount (numbers only):');
-    const amount = parseFloat(amountInput);
-    if (isNaN(amount)) {
-      alert('Invalid amount. Please enter a number.');
+    const amt = parseFloat(prompt('Enter amount:'));
+    if (isNaN(amt)) {
+      alert('Invalid number');
       return;
     }
 
-    setExpenses([...expenses, { type: selectedType, name, amount }]);
+    setExpensesByMonth(prev => {
+      const monthData = { ...(prev[month] || {}) };
+      const list = [...(monthData[selectedType] || [])];
+      list.push({ name, amount: amt });
+      monthData[selectedType] = list;
+      return { ...prev, [month]: monthData };
+    });
   }
 
-  function handleRemoveExpense(index) {
-    setExpenses(expenses.filter((_, i) => i !== index));
+  function handleRemoveExpense(i) {
+    setExpensesByMonth(prev => {
+      const monthData = { ...(prev[month] || {}) };
+      const list = [...(monthData[selectedType] || [])];
+      list.splice(i, 1);
+      monthData[selectedType] = list;
+      return { ...prev, [month]: monthData };
+    });
   }
 
-  function handleSendMessage() {
-    if (chatInput.trim()) {
-      setChatMessages([...chatMessages, { user: chatInput, bot: "Think about cutting unnecessary expenses!" }]);
-      setChatInput('');
+  function formatAmount(amount) {
+    if (selectedType === 'Monetary') return `$${amount}`;
+    if (selectedType === 'Time') return `${amount} hours`;
+    return `${amount} units`;
+  }
+
+  function getTotal() {
+    const list = expensesByMonth[month]?.[selectedType] || [];
+    return list.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  // === CHAT LOGIC (Prepared for real GPT integration) ===
+  async function handleSendMessage() {
+    if (!chatInput.trim()) return;
+    const userMsg = chatInput.trim();
+
+    setChatMessages(prev => [...prev, { user: userMsg, bot: '...' }]);
+    setChatInput('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg })
+      });
+
+      const data = await res.json();
+      const botMsg = data.choices?.[0]?.message?.content || 'No response';
+      setChatMessages(prev => {
+        const last = [...prev];
+        last[last.length - 1].bot = botMsg;
+        return last;
+      });
+    } catch {
+      setChatMessages(prev => {
+        const last = [...prev];
+        last[last.length - 1].bot = 'Error contacting AI.';
+        return last;
+      });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -76,122 +126,83 @@ function App() {
     localStorage.removeItem('chatMessages');
   }
 
-  function formatAmount(expense) {
-    switch (expense.type) {
-      case 'Monetary':
-        return `$${expense.amount}`;
-      case 'Time':
-        return `${expense.amount} hours`;
-      case 'Emotional/Mental':
-        return `${expense.amount} units`;
-      default:
-        return expense.amount;
-    }
-  }
-
   function generateMonthOptions() {
-    const months = [];
+    const options = [];
     for (let i = 0; i < 12; i++) {
       const date = new Date();
-      date.setMonth(date.getMonth() + i);
-      const year = date.getFullYear();
-      const monthIndex = date.getMonth();
-      const monthKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-      const label = `${monthNames[monthIndex]} ${year}`;
-      months.push({ key: monthKey, label });
+      date.setMonth(i);
+      const y = date.getFullYear();
+      const m = String(i + 1).padStart(2, '0');
+      const label = `${monthNames[i]} ${y}`;
+      options.push({ key: `${y}-${m}`, label });
     }
-    return months;
+    return options;
   }
 
-  const titleStyle = { fontSize: '1.5em', fontFamily: 'Arial, sans-serif' };
+  const currentExpenses = expensesByMonth[month]?.[selectedType] || [];
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Main App */}
-      <div style={{ flex: 3, padding: 20 }}>
-        <h1 style={titleStyle}>ExpenseMinimizer</h1>
+    <div className="app-layout">
+      {/* Main Section */}
+      <div className="main-section">
+        <h1>ExpenseMinimizer</h1>
 
-        {/* Month Selector */}
-        <select value={month} onChange={(e) => setMonth(e.target.value)}>
-          {generateMonthOptions().map(({ key, label }) => (
-            <option key={key} value={key}>{label}</option>
+        <select value={month} onChange={e => setMonth(e.target.value)}>
+          {generateMonthOptions().map(opt => (
+            <option key={opt.key} value={opt.key}>{opt.label}</option>
           ))}
         </select>
 
-        {/* Expense Type Tabs */}
-        <div style={{ marginTop: 20 }}>
-          {expenseTypes.map((type) => (
+        <div className="tabs">
+          {expenseTypes.map(type => (
             <button
               key={type}
+              className={selectedType === type ? 'active' : ''}
               onClick={() => setSelectedType(type)}
-              style={{
-                marginRight: 10,
-                padding: 10,
-                backgroundColor: selectedType === type ? '#ccc' : '#eee'
-              }}
             >
               {type}
             </button>
           ))}
         </div>
 
-        {/* Expense Title and Total aligned */}
-        <div style={{
-          marginTop: 20,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <h2 style={titleStyle}>{selectedType} Expenses {typeUnits[selectedType]}</h2>
-          <div style={{ ...titleStyle, marginRight: '10%' }}>
-            {selectedType === 'Monetary' && (
-              <div>Total Monetary Expenses ($): {expenses.filter(e => e.type === 'Monetary').reduce((sum, e) => sum + e.amount, 0)}</div>
-            )}
-            {selectedType === 'Time' && (
-              <div>Total Time Expenses (hours): {expenses.filter(e => e.type === 'Time').reduce((sum, e) => sum + e.amount, 0)}</div>
-            )}
-            {selectedType === 'Emotional/Mental' && (
-              <div>Total Emotional/Mental Expenses (units): {expenses.filter(e => e.type === 'Emotional/Mental').reduce((sum, e) => sum + e.amount, 0)}</div>
-            )}
+        <div className="header-row">
+          <h2>{selectedType} Expenses {typeUnits[selectedType]}</h2>
+          <div className="total-display">
+            Total: {getTotal()} {typeUnits[selectedType]}
           </div>
         </div>
 
-        {/* Expense List */}
-        <button onClick={handleAddExpense} style={{ marginTop: 10 }}>Add Expense</button>
-        <ul>
-          {expenses
-            .filter(e => e.type === selectedType)
-            .map((e, index) => (
-              <li key={index}>
-                {e.name} — {formatAmount(e)}
-                <button onClick={() => handleRemoveExpense(index)} style={{ marginLeft: 10 }}>
-                  Remove
-                </button>
-              </li>
-            ))
-          }
+        <button onClick={handleAddExpense} className="add-btn">Add Expense</button>
+        <ul className="expense-list">
+          {currentExpenses.map((e, i) => (
+            <li key={i}>
+              {e.name} — {formatAmount(e.amount)}
+              <button onClick={() => handleRemoveExpense(i)}>Remove</button>
+            </li>
+          ))}
         </ul>
       </div>
 
-      {/* Chatbox */}
-      <div style={{ flex: 1, borderLeft: '1px solid #ccc', padding: 20 }}>
-        <h2 style={titleStyle}>ExpenseMinimizerGPT</h2>
-        <div style={{ height: '75%', overflowY: 'auto', marginBottom: 10 }}>
-          {chatMessages.map((m, i) => (
-            <div key={i}>
-              <strong>You:</strong> {m.user}<br />
-              <strong>Bot:</strong> {m.bot}<br /><br />
+      {/* Chat Section */}
+      <div className="chat-section">
+        <h2>ExpenseMinimizerGPT</h2>
+        <div className="chat-box">
+          {chatMessages.map((msg, i) => (
+            <div key={i} className="chat-message">
+              <strong>You:</strong> {msg.user}<br />
+              <strong>Bot:</strong> {msg.bot}
             </div>
           ))}
         </div>
         <input
           value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          placeholder="Ask for advice..."
-          style={{ width: '100%', marginBottom: 10 }}
+          onChange={e => setChatInput(e.target.value)}
+          placeholder="Ask the assistant..."
         />
-        <button onClick={handleSendMessage} style={{ width: '100%', marginBottom: 10 }}>Send</button>
-        <button onClick={handleClearChat} style={{ width: '100%' }}>Clear Chat</button>
+        <button onClick={handleSendMessage} disabled={loading}>
+          {loading ? 'Thinking...' : 'Send'}
+        </button>
+        <button onClick={handleClearChat}>Clear Chat</button>
       </div>
     </div>
   );
