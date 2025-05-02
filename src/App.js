@@ -114,7 +114,7 @@ function App() {
 
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      if (!backendUrl) throw new Error("REACT_APP_BACKEND_URL is not defined");
+      if (!backendUrl) throw new Error("Missing REACT_APP_BACKEND_URL");
 
       const res = await fetch(`${backendUrl}/api/chat`, {
         method: 'POST',
@@ -122,11 +122,9 @@ function App() {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
+
       const botMsg = data.choices?.[0]?.message?.content || 'No response from AI.';
       setChatMessages(prev => {
         const updated = [...prev];
