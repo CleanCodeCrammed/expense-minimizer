@@ -24,7 +24,7 @@ USER MESSAGE: ${message}
 CURRENT MONTH: ${expenses.month}
 EXPENSES:
 ${Object.entries(expenses.data).map(([type, list]) => {
-    return `- ${type}:\n${list.map(e => `  • ${e.name}: ${e.amount}`).join('\n')}`;
+    return \`- \${type}:\n\${list.map(e => \`  • \${e.name}: \${e.amount}\`).join('\\n')}\`;
   }).join('\n')}
 `;
 
@@ -51,7 +51,12 @@ ${Object.entries(expenses.data).map(([type, list]) => {
   }
 });
 
-// KEY FIX: Bind to 0.0.0.0 for Render
+// Optional: allow GET for browser test
+app.get('/api/chat', (req, res) => {
+  res.status(200).send('ExpenseMinimizerGPT backend is running.');
+});
+
+// Required: bind to 0.0.0.0 for Render
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
