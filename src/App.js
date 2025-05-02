@@ -94,11 +94,10 @@ function App() {
     return list.reduce((sum, e) => sum + e.amount, 0);
   }
 
-  // === CHAT LOGIC WITH CONTEXT ===
   async function handleSendMessage() {
     if (!chatInput.trim()) return;
-    const userMsg = chatInput.trim();
 
+    const userMsg = chatInput.trim();
     const userExpenses = expensesByMonth[month] || {};
 
     const payload = {
@@ -114,11 +113,18 @@ function App() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/chat`, {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+      if (!backendUrl) throw new Error("REACT_APP_BACKEND_URL is not defined");
+
+      const res = await fetch(`${backendUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
 
       const data = await res.json();
       const botMsg = data.choices?.[0]?.message?.content || 'No response from AI.';
@@ -127,7 +133,8 @@ function App() {
         updated[updated.length - 1].bot = botMsg;
         return updated;
       });
-    } catch {
+    } catch (err) {
+      console.error('Chat error:', err.message);
       setChatMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1].bot = 'Error contacting the AI.';
