@@ -21,13 +21,22 @@ function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // === EFFECTS ===
   useEffect(() => {
     const saved = localStorage.getItem(storageKey(month));
-    if (saved) setExpensesByMonth(prev => ({ ...prev, [month]: JSON.parse(saved) }));
+    if (saved) {
+      setExpensesByMonth(prev => ({ ...prev, [month]: JSON.parse(saved) }));
+    }
 
     const savedChats = localStorage.getItem('chatMessages');
-    if (savedChats) setChatMessages(JSON.parse(savedChats));
+    if (savedChats) {
+      setChatMessages(JSON.parse(savedChats));
+    } else {
+      // Inject intro message from assistant
+      setChatMessages([{
+        user: '',
+        bot: `Hi, I’m ExpenseMinimizerGPT, your budgeting assistant. I don’t act unless asked — you can ask me to analyze your current expenses, suggest what to cut, suggest affordable alternatives, or even recommend useful investments (e.g., an ergonomic chair if you’re logging back pain). I’m here to help — just ask!`
+      }]);
+    }
   }, [month]);
 
   useEffect(() => {
@@ -87,10 +96,20 @@ function App() {
     return list.reduce((sum, e) => sum + e.amount, 0);
   }
 
-  // === CHAT LOGIC (Prepared for real GPT integration) ===
+  // === CHAT LOGIC WITH CONTEXT ===
   async function handleSendMessage() {
     if (!chatInput.trim()) return;
     const userMsg = chatInput.trim();
+
+    const userExpenses = expensesByMonth[month] || {};
+
+    const payload = {
+      message: userMsg,
+      expenses: {
+        month,
+        data: userExpenses
+      }
+    };
 
     setChatMessages(prev => [...prev, { user: userMsg, bot: '...' }]);
     setChatInput('');
@@ -100,21 +119,21 @@ function App() {
       const res = await fetch('http://localhost:5000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
-      const botMsg = data.choices?.[0]?.message?.content || 'No response';
+      const botMsg = data.choices?.[0]?.message?.content || 'No response from AI.';
       setChatMessages(prev => {
-        const last = [...prev];
-        last[last.length - 1].bot = botMsg;
-        return last;
+        const updated = [...prev];
+        updated[updated.length - 1].bot = botMsg;
+        return updated;
       });
     } catch {
       setChatMessages(prev => {
-        const last = [...prev];
-        last[last.length - 1].bot = 'Error contacting AI.';
-        return last;
+        const updated = [...prev];
+        updated[updated.length - 1].bot = 'Error contacting the AI.';
+        return updated;
       });
     } finally {
       setLoading(false);
@@ -189,7 +208,7 @@ function App() {
         <div className="chat-box">
           {chatMessages.map((msg, i) => (
             <div key={i} className="chat-message">
-              <strong>You:</strong> {msg.user}<br />
+              {msg.user && <><strong>You:</strong> {msg.user}<br /></>}
               <strong>Bot:</strong> {msg.bot}
             </div>
           ))}
