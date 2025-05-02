@@ -1,10 +1,13 @@
+const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
+require('dotenv').config();
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+const app = express();
+app.use(cors());
+app.use(express.json());
 
+app.post('/api/chat', async (req, res) => {
   const { message, expenses } = req.body;
 
   const prompt = `
@@ -41,9 +44,12 @@ ${Object.entries(expenses.data).map(([type, list]) => {
       }
     );
 
-    res.status(200).json(response.data);
+    res.json(response.data);
   } catch (err) {
     console.error(err.response?.data || err.message);
     res.status(500).json({ error: 'OpenAI request failed.' });
   }
-};
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
