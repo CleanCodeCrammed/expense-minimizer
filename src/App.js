@@ -31,7 +31,6 @@ function App() {
     if (savedChats) {
       setChatMessages(JSON.parse(savedChats));
     } else {
-      // Inject intro message from assistant
       setChatMessages([{
         user: '',
         bot: `Hi, I’m ExpenseMinimizerGPT, your budgeting assistant. I don’t act unless asked — you can ask me to analyze your current expenses, suggest what to cut, suggest affordable alternatives, or even recommend useful investments (e.g., an ergonomic chair if you’re logging back pain). I’m here to help — just ask!`
@@ -56,7 +55,6 @@ function App() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  // === EXPENSE LOGIC ===
   function handleAddExpense() {
     const name = prompt('Enter expense name:');
     if (!name) return;
@@ -115,8 +113,10 @@ function App() {
     setChatInput('');
     setLoading(true);
 
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
     try {
-      const res = await fetch('http://localhost:5000/api/chat', {
+      const res = await fetch(`${backendUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -162,7 +162,6 @@ function App() {
 
   return (
     <div className="app-layout">
-      {/* Main Section */}
       <div className="main-section">
         <h1>ExpenseMinimizer</h1>
 
@@ -202,7 +201,6 @@ function App() {
         </ul>
       </div>
 
-      {/* Chat Section */}
       <div className="chat-section">
         <h2>ExpenseMinimizerGPT</h2>
         <div className="chat-box">
