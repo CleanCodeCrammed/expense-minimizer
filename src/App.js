@@ -164,8 +164,8 @@ function App() {
   const currentExpenses = expensesByMonth[month]?.[selectedType] || [];
 
   return (
-    <div className="app-layout">
-      <div className="main-section">
+    <div className="app-container">
+      <div className="app-main">
         <h1>ExpenseMinimizer</h1>
 
         <select value={month} onChange={e => setMonth(e.target.value)}>
@@ -204,7 +204,7 @@ function App() {
         </ul>
       </div>
 
-      <div className="chat-section">
+      <div className="app-chat">
         <h2>ExpenseMinimizerGPT</h2>
         <div className="chat-box">
           {chatMessages.map((msg, i) => (

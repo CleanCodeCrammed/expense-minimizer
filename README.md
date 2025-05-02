@@ -34,6 +34,7 @@ Users can view, add, and remove expenses by type and month, and interact with a 
 | Hosting | AWS Amplify (Static Web Hosting) |
 | Version Control | GitHub |
 | CI/CD Pipeline | GitHub → AWS Amplify (Automatic Deploy on Push) |
+| Backend | Render (enables ChatGPT functionality) |
 
 ---
 
@@ -49,30 +50,23 @@ Users can view, add, and remove expenses by type and month, and interact with a 
 ## Project Deployment
 
 - **Source Code**: [GitHub Repository Link](https://github.com/CleanCodeCrammed/expense-minimizer)
-- **Live App**: [AWS Amplify App Link](https://YOUR_APP_LINK.amplifyapp.com)
-
-*(Replace the above links after deployment)*
+- **Live App**: [AWS Amplify App Link](https://main.d1wym3bjqwzec5.amplifyapp.com/)
 
 ---
 
 ## Future Enhancements
 
 In a full production version, the following improvements will be made:
-- **Backend Integration**:
-  - Store expense data in **AWS RDS (PostgreSQL)** for true cloud persistence.
-  - Authenticate users with **AWS Cognito** (Sign Up, Login, JWT tokens).
-- **Real GPT Integration**:
-  - Upgrade the chatbot using **Amazon Bedrock** or **Amazon Lex** with a real AI backend.
-- **Mobile Responsive Design**:
-  - Enhance the UI to adapt perfectly for mobile devices.
+- **Improved Mobile Responsive Design**:
+  - Enhance the UI to adapt perfectly for mobile devices (dialogue box dynamic adjustment).
 
 ---
 
 ## Challenges Faced
 
-- Time constraints: To meet strict deployment deadlines, frontend LocalStorage was used for persistence initially.
 - CI/CD setup: Ensuring GitHub to Amplify automated deployment pipeline was correctly configured.
 - Persistence: Redoing the project when DynamoDB failed and Git Hub rejected our OpenAI API was crucial.
+- Backend Setup: Configuring the Render link properly in .env, and deciding on render as the ideal backend service
 
 ---
 
