@@ -1,42 +1,61 @@
-/* Layout base */
+/* Reset & Base */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
 }
 
-.app-container {
+h1, h2 {
+  margin: 0 0 10px;
+}
+
+/* Layout container */
+.app-layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
 @media (min-width: 768px) {
-  .app-container {
+  .app-layout {
     flex-direction: row;
   }
 }
 
 /* Main section */
-.app-main {
-  flex: 1;
+.main-section {
+  flex: 3;
   padding: 20px;
   overflow-y: auto;
-  background-color: #ffffff;
-  border-bottom: 1px solid #ccc;
+  background-color: #fff;
 }
 
 @media (min-width: 768px) {
-  .app-main {
+  .main-section {
     border-right: 1px solid #ccc;
-    border-bottom: none;
   }
 }
 
-h1, h2 {
-  margin: 0 0 10px;
+/* Chat section */
+.chat-section {
+  flex: 1;
+  padding: 20px;
+  background-color: #f4f6f8;
+  border-top: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
 }
 
+@media (min-width: 768px) {
+  .chat-section {
+    border-top: none;
+    border-left: 1px solid #ccc;
+    height: auto;
+  }
+}
+
+/* Tabs */
 .tabs {
   margin: 15px 0;
 }
@@ -51,41 +70,43 @@ h1, h2 {
 }
 
 .tabs button.active {
-  background-color: #d0d0d0;
+  background-color: #ccc;
   font-weight: bold;
 }
 
+/* Header row */
 .header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 10px 0;
+  margin: 15px 0;
   flex-wrap: wrap;
 }
 
 .total-display {
   font-size: 1rem;
   color: #444;
+  margin-top: 5px;
 }
 
-/* Expense List */
-.add-btn {
+/* Buttons */
+button.add-btn {
   margin: 10px 0;
-  padding: 8px 12px;
-  background-color: #4285f4;
+  padding: 8px 14px;
+  background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.add-btn:hover {
-  background-color: #3367d6;
+button.add-btn:hover {
+  background-color: #388e3c;
 }
 
 .expense-list {
   list-style: none;
-  padding: 0;
+  padding-left: 0;
 }
 
 .expense-list li {
@@ -106,24 +127,15 @@ h1, h2 {
   background-color: #d32f2f;
 }
 
-/* Chat section */
-.app-chat {
-  flex: 1;
-  padding: 20px;
-  background-color: #f4f6f8;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
+/* Chat box */
 .chat-box {
   flex: 1;
   overflow-y: auto;
-  background-color: white;
+  background: white;
   border: 1px solid #ccc;
+  border-radius: 5px;
   padding: 10px;
   margin-bottom: 10px;
-  border-radius: 5px;
 }
 
 .chat-message {
@@ -131,16 +143,17 @@ h1, h2 {
   font-size: 0.95rem;
 }
 
-input {
+/* Chat input and buttons */
+.chat-section input {
   padding: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
   width: 100%;
   box-sizing: border-box;
 }
 
-button {
+.chat-section button {
   padding: 8px;
   margin-bottom: 8px;
   border-radius: 4px;
@@ -151,10 +164,10 @@ button {
   color: white;
 }
 
-button:disabled {
+.chat-section button:disabled {
   background-color: #aaa;
 }
 
-button:hover:not(:disabled) {
+.chat-section button:hover:not(:disabled) {
   background-color: #1565c0;
 }
