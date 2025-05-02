@@ -113,10 +113,8 @@ function App() {
     setChatInput('');
     setLoading(true);
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-
     try {
-      const res = await fetch(`${backendUrl}/api/chat`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
