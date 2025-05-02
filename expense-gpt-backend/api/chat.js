@@ -1,19 +1,11 @@
-const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
-require('dotenv').config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-app.post('/api/chat', async (req, res) => {
   const { message, expenses } = req.body;
-
-  const expenseLines = Object.entries(expenses.data || {}).map(([type, list]) => {
-    const lines = list.map(e => `  • ${e.name}: ${e.amount}`).join('\n');
-    return `- ${type}:\n${lines}`;
-  }).join('\n');
 
   const prompt = `
 You are ExpenseMinimizerGPT. Based on the user's current monthly expenses, help them optimize their budget.
@@ -28,8 +20,10 @@ Be critical and helpful. Only act when prompted.
 USER MESSAGE: ${message}
 CURRENT MONTH: ${expenses.month}
 EXPENSES:
-${expenseLines}
-  `;
+${Object.entries(expenses.data).map(([type, list]) => {
+    return `- ${type}:\n${list.map(e => `  • ${e.name}: ${e.amount}`).join('\n')}`;
+  }).join('\n')}
+`;
 
   try {
     const response = await axios.post(
@@ -47,12 +41,9 @@ ${expenseLines}
       }
     );
 
-    res.json(response.data);
+    res.status(200).json(response.data);
   } catch (err) {
     console.error(err.response?.data || err.message);
     res.status(500).json({ error: 'OpenAI request failed.' });
   }
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+};
